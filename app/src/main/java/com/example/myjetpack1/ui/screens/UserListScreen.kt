@@ -24,7 +24,7 @@ fun UserListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val lazyUserItems = viewModel.users.collectAsLazyPagingItems()
 
-    Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
+    Column(modifier = Modifier.fillMaxSize()) {
         TextField(
             value = searchQuery,
             onValueChange = { query -> viewModel.searchUsers(query) },
@@ -48,11 +48,9 @@ fun UserListScreen(
             lazyUserItems.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
-                        if (lazyUserItems.itemCount == 0) { // Only show if the list is empty
-                            item {
-                                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator()
-                                }
+                        item {
+                            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
                             }
                         }
                     }

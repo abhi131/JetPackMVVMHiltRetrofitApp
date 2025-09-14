@@ -49,13 +49,10 @@ fun AppNavigation() {
                 onUserClick = { user ->
                     try {
                         val userJson = gson.toJson(user)
-                        // URL encode the JSON string to safely pass it as a nav argument
                         val encodedUserJson = URLEncoder.encode(userJson, StandardCharsets.UTF_8.name())
                         navController.navigate(NavRoutes.userDetailScreen(encodedUserJson))
                     } catch (e: Exception) {
-                        // Handle exceptions during JSON serialization or URL encoding
                         e.printStackTrace()
-                        // Optionally, show a toast or log an error
                     }
                 }
             )
@@ -71,8 +68,7 @@ fun AppNavigation() {
                         URLDecoder.decode(encodedUserJson, StandardCharsets.UTF_8.name())
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        // Optionally, log the error more formally
-                        null // Indicate failure
+                        null
                     }
                 })
 

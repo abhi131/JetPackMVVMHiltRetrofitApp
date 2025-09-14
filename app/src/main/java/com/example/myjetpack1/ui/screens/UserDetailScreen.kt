@@ -37,11 +37,11 @@ fun UserDetailScreen(
             try {
                 user = Gson().fromJson(userJson, User::class.java)
             } catch (e: Exception) {
-                e.printStackTrace() // For now, just print stack trace
-                user = null // Ensure user is null if parsing fails
+                e.printStackTrace()
+                user = null
             }
         } else {
-            user = null // If userJson is null or blank, set user to null
+            user = null
         }
     }
 
