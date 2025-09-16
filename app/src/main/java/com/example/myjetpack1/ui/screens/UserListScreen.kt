@@ -11,7 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
+import androidx.paging.compose.itemKey // Ensure this is androidx.paging.compose.itemKey
 import com.example.myjetpack1.model.User
 import com.example.myjetpack1.viewmodel.UserViewModel
 import com.example.myjetpack1.ui.components.UserItem
@@ -34,51 +34,87 @@ fun UserListScreen(
                 .padding(16.dp)
         )
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(
-                count = lazyUserItems.itemCount,
-                key = lazyUserItems.itemKey { user -> user.login.uuid } 
-            ) { index ->
-                val user = lazyUserItems[index]
-                if (user != null) {
-                    UserItem(user = user, onClick = { onUserClick(user) })
+        // It's often clearer to handle the overall refresh state first
+        when (val refreshState = lazyUserItems.loadState.refresh) {
+            is LoadState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
+            is LoadState.Error -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Error: ${refreshState.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { lazyUserItems.retry() }) {
+                        Text("Retry")
+                    }
+                }
+            }
+            is LoadState.NotLoading -> {
+                if (lazyUserItems.itemCount == 0 && searchQuery.isNotEmpty()) { // Show only if search is performed and no results
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No users found for '$searchQuery'.")
+                    }
+                } else if (lazyUserItems.itemCount == 0 && searchQuery.isEmpty()) { // Initial empty state or empty after clearing search
+                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Search for users to see results.")
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(
+                            count = lazyUserItems.itemCount,
+                            key = lazyUserItems.itemKey { user -> user.login.uuid }
+                        ) { index ->
+                            val user = lazyUserItems[index]
+                            if (user != null) {
+                                UserItem(user = user, onClick = { onUserClick(user) })
+                            }
+                        }
 
-            lazyUserItems.apply {
-                when {
-                    loadState.refresh is LoadState.Loading -> {
-                        item {
-                            Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                    }
-                    loadState.append is LoadState.Loading -> {
-                        item {
-                            Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.Center) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                    }
-                    loadState.refresh is LoadState.Error -> {
-                        val e = lazyUserItems.loadState.refresh as LoadState.Error
-                        item {
-                            Column(modifier = Modifier.fillParentMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
-                                Button(onClick = { retry() }) {
-                                    Text("Retry")
+                        // Handle append state only when not in refresh loading/error
+                        // and when there are items
+                        when (val appendState = lazyUserItems.loadState.append) {
+                            is LoadState.Loading -> {
+                                item {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp),
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
                                 }
                             }
-                        }
-                    }
-                    loadState.append is LoadState.Error -> {
-                         val e = lazyUserItems.loadState.append as LoadState.Error
-                        item {
-                             Column(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
-                                Button(onClick = { retry() }) {
-                                    Text("Retry")
+                            is LoadState.Error -> {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text("Error: ${appendState.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
+                                        Button(onClick = { lazyUserItems.retry() }) {
+                                            Text("Retry")
+                                        }
+                                    }
+                                }
+                            }
+                            is LoadState.NotLoading -> {
+                                if (appendState.endOfPaginationReached && lazyUserItems.itemCount > 0) {
+                                    item {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                            horizontalArrangement = Arrangement.Center
+                                        ) {
+                                           Text("You've reached the end!")
+                                        }
+                                    }
                                 }
                             }
                         }
