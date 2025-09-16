@@ -1,7 +1,7 @@
 package com.example.myjetpack1.model
 
 data class UserResponse(
-    val results: List<User>,
+    val results: List<NetworkUser>,
     val info: Info
 )
 

@@ -2,9 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("kapt")
-    id("kotlin-kapt") 
     alias(libs.plugins.hilt.android.gradle)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -72,10 +71,9 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android) // Or latest
-    kapt(libs.hilt.compiler) // Or latest
-    kapt(libs.androidx.hilt.compiler) // Or latest for Hilt-Compose integration
+    ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose) // Added Hilt Navigation Compose
-    kapt(libs.squareup.javapoet) // Force a specific version of JavaPoet for kapt
 
     // Retrofit
     implementation(libs.retrofit)
@@ -92,4 +90,10 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx) // For coroutines support
+    implementation(libs.androidx.room.paging) // For Paging 3 support
+    ksp(libs.androidx.room.compiler)
 }
